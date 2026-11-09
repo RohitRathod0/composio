@@ -2,6 +2,16 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+// Auto-load .env so plain `node server.js` works without setting env vars manually.
+try {
+  const envFile = new URL('.env', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1');
+  for (const line of fs.readFileSync(envFile, 'utf8').split(/\r?\n/)) {
+    const m = line.match(/^\s*([^#=\s][^=]*?)\s*=\s*(.*?)\s*$/);
+    if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+  }
+} catch { /* no .env — env vars must be set externally, which is fine */ }
+
 import { generateGuide } from './lib/agent.js';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
