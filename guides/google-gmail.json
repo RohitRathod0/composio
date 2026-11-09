@@ -1,0 +1,60 @@
+{
+  "slug": "google-gmail", "name": "Google (Gmail)", "website": "https://developers.google.com/gmail", "mode": "curated", "generatedAt": "2026-11-06",
+  "category": "Email",
+  "summary": "Creating the OAuth client takes minutes, but Gmail read scopes are classed as restricted. Going live for the public needs Google's OAuth verification plus an annual third-party security assessment (CASA). Budget weeks, and money for the assessor (the cost is not confirmed).",
+  "difficulty": { "score": 5, "label": "Hard", "why": "Restricted scopes need verification, a demo video, scope justification and an annual independent security assessment." },
+  "time": { "handsOn": "Setup 30 min. Verification prep 2-5 days (demo video, privacy policy, scope justification, security remediation).", "wait": "Google says restricted scope verification can potentially take several weeks.", "total": "Plan 4-8+ weeks to public launch" },
+  "approval": { "required": true, "type": "OAuth app verification + CASA security assessment", "detail": "Annual reverification at least every 12 months from the Letter of Assessment approval date. Exceptions exist for personal use, internal use, or service-owned data only." },
+  "endpoints": { "authorize": "https://accounts.google.com/o/oauth2/v2/auth", "token": "https://oauth2.googleapis.com/token", "pkce": "S256 and plain (tested)", "discovery": "accounts.google.com/.well-known/openid-configuration (tested, found)" },
+  "agentCan": [
+    "Choose the narrowest Gmail scopes. For example, gmail.send and gmail.metadata sit in different categories than gmail.readonly, so a narrower design can avoid restricted status (check the scope's category in Cloud Console)",
+    "Draft the scope justification, privacy policy sections and data-deletion process that verification asks for",
+    "Write the demo-video script showing the consent screen and each scope in use",
+    "Verify endpoints, PKCE support and grant types from live discovery metadata",
+    "Prepare a CASA readiness checklist"
+  ],
+  "youMustDo": [
+    "Create the Cloud project and consent screen in Google Cloud Console (needs your Google login and, for production, an app domain you can verify)",
+    "Record and submit the demo video, and answer Google's review emails",
+    "Engage an approved assessor, pay them, and fix the findings",
+    "Keep Owner/Editor and support contacts current so renewal notices reach someone"
+  ],
+  "steps": [
+    { "title": "Pick scopes with verification in mind", "who": "agent", "detail": "Google labels each scope non-sensitive, sensitive or restricted when you add it in the console. Restricted scopes trigger the security assessment if data reaches a third-party server. Reducing to sensitive-only scopes can cut weeks.", "src": ["g-restricted", "g-verify"] },
+    { "title": "Create a Cloud project, consent screen and OAuth client", "who": "you", "detail": "Create the project, configure the consent screen, then create an OAuth client ID with your redirect URIs. Console: console.cloud.google.com/apis/credentials (requires sign-in).", "src": ["probe-urls"] },
+    { "title": "Build and test while in Testing status", "who": "agent", "detail": "While unverified you can use test users only. From memory (not verified here): up to 100 test users, and refresh tokens expire after 7 days in Testing, which surprises teams who think their integration broke.", "src": ["g-recalled"] },
+    { "title": "Prepare the verification package", "who": "either", "detail": "Required per Google: a demonstration video and a justification for each restricted scope. Also a privacy policy and a verified domain. Brand verification typically takes 2-3 business days, with an automated review usually done in minutes.", "src": ["g-restricted"] },
+    { "title": "Submit for OAuth verification", "who": "you", "detail": "Respond to Google's emails promptly. Unanswered reviews stall.", "src": ["g-restricted"] },
+    { "title": "Complete the CASA security assessment", "who": "you", "detail": "An independent assessor approved by Google checks that you handle data securely and can delete data on request. Google uses the App Defense Alliance CASA framework. The outcome is a Letter of Assessment (LOA).", "src": ["g-restricted"] },
+    { "title": "Plan annual reverification", "who": "you", "detail": "Reverify at least every 12 months after your LOA approval date. Adding a restricted scope may require reassessment. Google emails when due.", "src": ["g-restricted"] }
+  ],
+  "requirements": [
+    "Google Cloud project with the Gmail API enabled",
+    "Public privacy policy and app homepage on a domain you can verify",
+    "Demo video and per-scope justification",
+    "Independent security assessment if you use restricted scopes and store data on a server"
+  ],
+  "gotchas": [
+    { "issue": "Gmail read access is restricted", "detail": "Reading mail bodies is the typical trigger for CASA. A design that only sends mail or reads metadata may sit in a lighter category.", "src": ["g-restricted"] },
+    { "issue": "Several weeks is Google's own wording", "detail": "'The restricted scopes verification process can potentially take several weeks to complete.' No upper bound is given.", "src": ["g-restricted"] },
+    { "issue": "Assessor cost", "detail": "Assessments are done by paid third-party labs. I could not confirm current prices, so get quotes early.", "src": [] },
+    { "issue": "Exceptions", "detail": "Personal use, internal use (e.g. Workspace internal app), or service-owned data may skip verification.", "src": ["g-restricted"] },
+    { "issue": "Testing-mode token expiry", "detail": "Recalled, not verified in this run.", "src": ["g-recalled"] }
+  ],
+  "blockers": [
+    { "problem": "Users see an 'unverified app' warning", "fix": "Expected until verification completes. Keep to test users, or move to production and complete verification." },
+    { "problem": "Verification rejected for scope mismatch", "fix": "Remove scopes you do not demonstrably use, or show their use in the video." },
+    { "problem": "Assessment blocks launch", "fix": "Re-architect to avoid storing restricted data on your server, or choose narrower scopes." }
+  ],
+  "sources": [
+    { "id": "g-restricted", "url": "https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification", "title": "Google: Restricted scope verification", "status": "read", "note": "Fetched 2026-11-06. Source for CASA, annual reverification, several-weeks wording, brand verification time, exceptions, video and justification." },
+    { "id": "g-verify", "url": "https://support.google.com/cloud/answer/13463073", "title": "Google Cloud Help: OAuth app verification overview", "status": "read", "note": "Fetched 2026-11-06. Only a landing page: confirms scope categories and annual re-verification but did not cover testing-mode limits." },
+    { "id": "g-recalled", "url": "https://support.google.com/cloud/answer/10311615", "title": "Google Cloud Help: Testing status limits", "status": "unverified", "note": "The 100-test-user cap and 7-day refresh-token expiry are from prior knowledge and were NOT confirmed this run." },
+    { "id": "probe-urls", "url": "https://console.cloud.google.com/apis/credentials", "title": "Probe: Cloud Console credentials page", "status": "tested", "note": "Resolves but redirects to Google sign-in." }
+  ],
+  "tested": [
+    { "what": "accounts.google.com/.well-known/openid-configuration and oauth-authorization-server", "result": "Both 200. Endpoints: /o/oauth2/v2/auth and oauth2.googleapis.com/token. PKCE: plain, S256. Grants: authorization_code, refresh_token, device_code, jwt-bearer.", "at": "2026-11-06" },
+    { "what": "Cloud Console credentials URL", "result": "Redirects to sign-in, so project creation can't be done by an agent without the user's session.", "at": "2026-11-06" }
+  ],
+  "confidence": "High on the verification and CASA requirement (primary doc). Low on Testing-mode limits and assessor cost."
+}

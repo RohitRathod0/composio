@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OAuth Pathfinder</title>
+<style>
+:root{--bg:#fafaf8;--fg:#1c1c1a;--mut:#6b6b66;--card:#fff;--line:#e4e3de;--acc:#2f5bea;--ok:#1d7a46;--warn:#a15c00;--bad:#b3261e}
+@media (prefers-color-scheme:dark){:root{--bg:#141412;--fg:#ececE8;--mut:#9a9992;--card:#1c1c1a;--line:#2f2f2b;--acc:#7b9bff;--ok:#5ac98a;--warn:#e0a34a;--bad:#ff8a80}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:860px;margin:0 auto;padding:32px 16px 80px}
+a{color:var(--acc)}h1{font-size:28px;margin:0 0 4px}h2{font-size:18px;margin:32px 0 10px}.mut{color:var(--mut)}
+form{display:flex;gap:8px;margin:20px 0}input{flex:1;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);font:inherit}
+button{padding:12px 18px;border:0;border-radius:8px;background:var(--acc);color:#fff;font:inherit;cursor:pointer}button:disabled{opacity:.5}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.card{display:block;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;color:inherit;text-decoration:none}.card:hover{border-color:var(--acc)}
+.card b{display:block}.pill{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;border:1px solid var(--line);margin-right:4px}
+.d1,.d2{color:var(--ok)}.d3{color:var(--warn)}.d4,.d5{color:var(--bad)}
+.hero{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}@media(max-width:620px){.hero{grid-template-columns:1fr}}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px}.stat small{color:var(--mut);display:block;text-transform:uppercase;letter-spacing:.04em;font-size:11px}.stat span{font-size:17px;font-weight:600}
+.step{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}.n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--line);text-align:center;font-size:13px;line-height:26px}
+.who{font-size:11px;padding:1px 8px;border-radius:99px;margin-left:6px;vertical-align:middle;border:1px solid currentColor}.who.agent{color:var(--ok)}.who.you{color:var(--warn)}.who.either{color:var(--mut)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:620px){.cols{grid-template-columns:1fr}}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px}.box ul{padding-left:18px;margin:6px 0}
+.src{font-size:13px}.s-tested{color:var(--ok)}.s-read{color:var(--acc)}.s-unverified{color:var(--bad)}
+.ref{font-size:11px;color:var(--mut);margin-left:4px}.log{font:13px/1.5 ui-monospace,monospace;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px;max-height:260px;overflow:auto;white-space:pre-wrap}
+.banner{border:1px solid var(--warn);border-radius:8px;padding:10px 14px;color:var(--warn);margin:12px 0}
+.share{float:right}pre{white-space:pre-wrap}
+</style>
+</head>
+<body><main id="app"></main>
+<script>
+const $ = s => document.querySelector(s), app = $('#app');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safeUrl = u => /^https?:\/\//i.test(u) ? esc(u) : '#';
+const WHO = {agent:'agent can do', you:'you do', either:'either'};
+const STAT = {tested:'tested live', read:'doc read', unverified:'not verified'};
+
+async function home() {
+  document.title = 'OAuth Pathfinder';
+  const [guides, st] = await Promise.all([fetch('/api/guides').then(r => r.json()), fetch('/api/status').then(r => r.json())]);
+  app.innerHTML = `<h1>OAuth Pathfinder</h1>
+  <p class="mut">Before your agent can connect a user's app, you may need to register an OAuth app with the provider and get it approved. Look up an app to see how hard that is, how long it takes, and who does what.</p>
+  <form id="f"><input id="q" placeholder="App name or website, e.g. Zoom, or hubspot.com" required maxlength="120"><button>Generate guide</button></form>
+  ${st.llm ? '' : '<div class="banner">No GROQ_API_KEY on this server: new apps get a probe-only result (links and discovery metadata, no interpretation).</div>'}
+  <div id="prog"></div>
+  <h2>Guide library</h2><div class="grid">${guides.map(g => `<a class="card" href="/g/${esc(g.slug)}"><b>${esc(g.name)}</b>
+    <span class="pill d${+g.difficulty?.score||0}">${esc(g.difficulty?.label)}</span><span class="pill">${g.mode === 'curated' ? 'curated' : esc(g.mode)}</span>
+    <div class="mut" style="font-size:14px;margin-top:6px">${esc(g.time?.total)}</div></a>`).join('')}</div>`;
+  $('#f').onsubmit = async e => {
+    e.preventDefault(); const btn = e.target.querySelector('button'); btn.disabled = true;
+    const p = $('#prog'); p.innerHTML = '<h2>Agent working</h2><div class="log" id="log"></div>';
+    const add = t => { const l = $('#log'); l.textContent += t + '\n'; l.scrollTop = l.scrollHeight; };
+    try {
+      const r = await fetch('/api/generate', {method:'POST', body: JSON.stringify({q: $('#q').value})});
+      if (!r.ok) throw new Error((await r.json()).error);
+      const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '';
+      while (true) {
+        const {done, value} = await rd.read(); if (done) break;
+        buf += dec.decode(value, {stream: true}); const parts = buf.split('\n\n'); buf = parts.pop();
+        for (const part of parts) {
+          const ev = JSON.parse(part.replace(/^data: /, ''));
+          if (ev.type === 'tool') add(`> ${ev.tool} ${JSON.stringify(ev.input).slice(0, 110)}`);
+          else if (ev.type === 'result') add(`  ${ev.ok ? 'ok' : 'FAILED'}: ${ev.summary}`);
+          else if (ev.type === 'thought') add(`# ${ev.text}`);
+          else if (ev.type === 'error') throw new Error(ev.message);
+          else if (ev.type === 'done') { history.pushState({}, '', '/g/' + ev.slug); route(); return; }
+        }
+      }
+    } catch (err) { add('ERROR: ' + err.message); btn.disabled = false; }
+  };
+}
+
+function list(items) { return items?.length ? `<ul>${items.map(i => `<li>${esc(i)}</li>`).join('')}</ul>` : '<p class="mut">None listed.</p>'; }
+
+async function guide(slug) {
+  const r = await fetch('/api/guides/' + encodeURIComponent(slug));
+  if (!r.ok) { app.innerHTML = '<p>Guide not found. <a href="/">Back</a></p>'; return; }
+  const g = await r.json(); document.title = g.name + ' OAuth setup guide';
+  const ids = (g.sources || []).map(s => s.id);
+  const ref = src => (src || []).map(i => `<a class="ref" href="#src-${esc(i)}">[${ids.indexOf(i) + 1}]</a>`).join('');
+  const d = +g.difficulty?.score || 0;
+  app.innerHTML = `<a href="/">&larr; All apps</a><button class="share" id="share">Copy link</button>
+  <h1>${esc(g.name)}</h1><div class="mut">${esc(g.category)} · ${g.mode === 'curated' ? 'curated and spot-checked' : g.mode === 'live' ? 'generated live by agent on ' + esc(g.generatedAt) : 'probe-only'}</div>
+  ${g.mode === 'live' ? '<div class="banner">Generated by an agent and not human reviewed. Check the evidence labels before relying on it.</div>' : ''}
+  ${g.mode === 'probe-only' ? '<div class="banner">Probe-only: no model read the docs. This is a link list, not a guide.</div>' : ''}
+  <p>${esc(g.summary)}</p>
+  <div class="hero"><div class="stat"><small>Difficulty</small><span class="d${d}">${d ? d + '/5 · ' : ''}${esc(g.difficulty?.label)}</span><div class="mut" style="font-size:13px">${esc(g.difficulty?.why)}</div></div>
+  <div class="stat"><small>Time</small><span>${esc(g.time?.total)}</span><div class="mut" style="font-size:13px">Hands-on: ${esc(g.time?.handsOn)}<br>Waiting: ${esc(g.time?.wait)}</div></div>
+  <div class="stat"><small>Provider approval</small><span>${g.approval?.required ? 'Required' : 'Not required'}</span><div class="mut" style="font-size:13px">${esc(g.approval?.type)}</div></div></div>
+  <div class="box">${esc(g.approval?.detail)}</div>
+  <div class="cols" style="margin-top:12px"><div class="box"><b>Agent can</b>${list(g.agentCan)}</div><div class="box"><b>You take over for</b>${list(g.youMustDo)}</div></div>
+  <h2>Steps</h2>${(g.steps || []).map((s, i) => `<div class="step"><div class="n">${i + 1}</div><div><b>${esc(s.title)}</b><span class="who ${esc(s.who)}">${WHO[s.who] || ''}</span>${ref(s.src)}<div>${esc(s.detail)}</div></div></div>`).join('') || '<p class="mut">No steps were produced.</p>'}
+  <h2>Requirements</h2>${list(g.requirements)}
+  <h2>Watch out for</h2>${(g.gotchas || []).map(x => `<p><b>${esc(x.issue)}</b>${ref(x.src)}<br>${esc(x.detail)}</p>`).join('')}
+  <h2>If you get blocked</h2>${(g.blockers || []).map(x => `<p><b>${esc(x.problem)}</b><br>${esc(x.fix)}</p>`).join('')}
+  ${g.endpoints ? `<h2>Endpoints</h2><div class="box"><pre>${Object.entries(g.endpoints).map(([k, v]) => k + ': ' + esc(v)).join('\n')}</pre></div>` : ''}
+  <h2>Evidence</h2><p class="mut">${esc(g.confidence)}</p>
+  ${(g.tested || []).length ? `<div class="box"><b>What was tested</b>${g.tested.map(t => `<p style="margin:6px 0"><span class="mut">${esc(t.at)}</span> ${esc(t.what)}<br>→ ${esc(t.result)}</p>`).join('')}</div>` : ''}
+  <h2>Sources</h2><ol>${(g.sources || []).map(s => `<li id="src-${esc(s.id)}" class="src"><a href="${safeUrl(s.url)}" rel="noopener" target="_blank">${esc(s.title)}</a> <b class="s-${esc(s.status)}">${STAT[s.status] || esc(s.status)}</b><br><span class="mut">${esc(s.note)}</span></li>`).join('')}</ol>
+  ${g.meta?.auditNotes?.length ? `<div class="box"><b>Evidence audit</b>${list(g.meta.auditNotes)}</div>` : ''}`;
+  $('#share').onclick = () => { navigator.clipboard?.writeText(location.href); $('#share').textContent = 'Copied'; };
+}
+
+function route() {
+  const m = location.pathname.match(/^\/g\/(.+)$/);
+  (m ? guide(decodeURIComponent(m[1])) : home()).catch(e => app.textContent = 'Error: ' + e.message);
+}
+addEventListener('popstate', route); route();
+</script>
+</body>
+</html>

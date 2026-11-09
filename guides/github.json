@@ -1,0 +1,51 @@
+{
+  "slug": "github", "name": "GitHub", "website": "https://github.com", "mode": "curated", "generatedAt": "2026-11-06",
+  "category": "Developer tools",
+  "summary": "Self-serve, no review. Register an OAuth App in about 10 minutes. The real friction comes later: organizations can block third-party OAuth apps until an org owner approves them, and GitHub steers new builds toward GitHub Apps.",
+  "difficulty": { "score": 1, "label": "Easy", "why": "No provider approval. Form with 3 required fields." },
+  "time": { "handsOn": "10-15 min", "wait": "None from GitHub. Per-org approval takes as long as a customer's admin takes.", "total": "Under an hour" },
+  "approval": { "required": false, "type": "None for OAuth Apps", "detail": "No GitHub review exists. The gate is customer organizations that enable OAuth App access restrictions." },
+  "endpoints": { "authorize": "https://github.com/login/oauth/authorize", "token": "https://github.com/login/oauth/access_token", "pkce": "Supported (recalled, not tested)", "discovery": "None published (probe returned 404)" },
+  "agentCan": [
+    "Draft the app name, homepage and callback values, and check callback URL syntax",
+    "Generate the authorize URL with a state parameter and the minimal scopes for your use case",
+    "Run the token exchange and a smoke-test call once you paste in the client ID and secret",
+    "Recommend OAuth App vs GitHub App for your use case"
+  ],
+  "youMustDo": [
+    "Sign in to GitHub and open Settings > Developer settings (the console sits behind a login, so an agent cannot reach it)",
+    "Copy the client secret and store it right away",
+    "For each customer org that restricts access, ask an org owner to approve your app"
+  ],
+  "steps": [
+    { "title": "Decide: OAuth App or GitHub App", "who": "agent", "detail": "OAuth Apps act as the user with coarse scopes like repo, which grants broad access. GitHub Apps have fine-grained permissions and can be installed per repo. If your agent needs only a few repos or read-only data, a GitHub App is the safer ask for your users. Choose an OAuth App when you want the simple user-token model.", "src": ["gh-docs"] },
+    { "title": "Open Developer settings", "who": "you", "detail": "Profile picture > Settings > Developer settings > OAuth Apps > New OAuth App. To register under an organization, you need admin access to it. A user or org can own up to 100 OAuth apps.", "src": ["gh-docs"] },
+    { "title": "Fill in the form", "who": "either", "detail": "Required: application name, homepage URL, authorization callback URL. You can add up to 10 callback URLs. Tick 'Enable Device Flow' only if you need it. 'Expire user access tokens' is on by default, so leave it on and implement refresh tokens unless you have a reason not to.", "src": ["gh-docs"] },
+    { "title": "Register and store credentials", "who": "you", "detail": "Click Register application, then generate a client secret. Put both values in a secrets manager, never in the repo.", "src": ["gh-docs"] },
+    { "title": "Run the flow end to end", "who": "agent", "detail": "Send the user to /login/oauth/authorize with client_id, redirect_uri, scope and state. Exchange the code at /login/oauth/access_token. Call GET https://api.github.com/user to confirm.", "src": ["gh-docs"] },
+    { "title": "Prepare for org restrictions", "who": "you", "detail": "In orgs with OAuth App access restrictions on, your app gets no access to org data until an owner approves it. Write a 2-line explanation customers can forward to their admin.", "src": ["gh-org"] }
+  ],
+  "requirements": [
+    "A GitHub account (an org if you want the app owned by a company)",
+    "A homepage URL. GitHub warns that app info must be safe to make public",
+    "HTTPS callback in production"
+  ],
+  "gotchas": [
+    { "issue": "Org admins can block your app", "detail": "Customers with OAuth App access restrictions enabled see your app as unapproved until an owner approves it.", "src": ["gh-org"] },
+    { "issue": "Scopes are coarse", "detail": "The 'repo' scope grants read/write to all private repos the user can reach. Security-conscious buyers push back on this, which is the main reason to consider a GitHub App.", "src": ["gh-docs"] },
+    { "issue": "Token expiry is on by default", "detail": "New apps get short-lived user tokens with refresh tokens. Code that assumes tokens never expire will break.", "src": ["gh-docs"] }
+  ],
+  "blockers": [
+    { "problem": "Customer sees an access-restricted or not-approved message", "fix": "An org owner approves it under Org settings > Third-party access. This is a customer-side action." },
+    { "problem": "redirect_uri_mismatch", "fix": "The redirect_uri must match a registered callback URL. Add each environment's URL (up to 10)." }
+  ],
+  "sources": [
+    { "id": "gh-docs", "url": "https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/creating-an-oauth-app", "title": "GitHub Docs: Creating an OAuth app", "status": "read", "note": "Fetched 2026-11-06. Confirms steps, required fields, 10 callback URLs, 100 app limit, default token expiry. The page mentions no review." },
+    { "id": "gh-org", "url": "https://docs.github.com/en/organizations/managing-oauth-access-to-your-organizations-data", "title": "GitHub Docs: OAuth App access restrictions", "status": "unverified", "note": "Cited from prior knowledge. Not fetched in this run." }
+  ],
+  "tested": [
+    { "what": "GET /.well-known/oauth-authorization-server and openid-configuration on github.com", "result": "404 on both. GitHub publishes no discovery metadata, so endpoints must come from docs.", "at": "2026-11-06" },
+    { "what": "Developer settings URL", "result": "Redirects to github.com/login. A login is required, so this step cannot be automated without the user's session.", "at": "2026-11-06" }
+  ],
+  "confidence": "High for the registration steps (primary doc read). Medium for org-restriction behavior (not re-checked this run)."
+}

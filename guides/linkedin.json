@@ -1,0 +1,57 @@
+{
+  "slug": "linkedin", "name": "LinkedIn", "website": "https://www.linkedin.com/developers", "mode": "curated", "generatedAt": "2026-11-06",
+  "category": "Social / marketing",
+  "summary": "Creating the app is quick. What your agent can actually do depends on which API Product LinkedIn approves. Posting on behalf of company Pages (Community Management API) and ads need an application, with a Development tier first and a separate upgrade to Standard. Restricted products have no fixed review timeline.",
+  "difficulty": { "score": 4, "label": "Hard", "why": "Product-level approval gates the permissions you need, with a second approval for production tier." },
+  "time": { "handsOn": "Setup 30 min; application writing 1-2 hours", "wait": "No stated timeline. For restricted APIs LinkedIn says 'no fixed timeline'.", "total": "Unknown. Expect weeks (my estimate, not a LinkedIn figure)" },
+  "approval": { "required": true, "type": "Per-product access request; second request for Standard tier", "detail": "Community Management Development tier is limited to 500 calls per app per 24h and 100 per member per 24h, and you must finish within 12 months. Standard tier has no restrictions. LinkedIn may decline an upgrade even if you meet the minimums." },
+  "endpoints": { "authorize": "https://www.linkedin.com/oauth/v2/authorization", "token": "https://www.linkedin.com/oauth/v2/accessToken", "pkce": "Unknown", "discovery": "None published at the root (probe returned 404)" },
+  "agentCan": [
+    "Draft the use-case description and screenshots plan for the product access application",
+    "Map your feature list to the specific permissions (e.g. w_organization_social, r_organization_social) and the product that grants them",
+    "Build the authorization code flow and the 60-day token refresh UX",
+    "Check which tier your feature set truly needs, to avoid applying for more than necessary"
+  ],
+  "youMustDo": [
+    "Create the app in the LinkedIn Developer Portal (login required)",
+    "Submit the product access application and respond to LinkedIn's follow-ups",
+    "Ask for the Standard tier through the Developer Support Portal when ready (for Advertising)"
+  ],
+  "steps": [
+    { "title": "Map features to products", "who": "agent", "detail": "Scopes available to your app depend on the Products or Partner Programs it has. Community Management, Advertising, Events Management, Lead Sync, Conversions and Matched Audiences are open to approved developers via the standard application. Audience Insights and Media Planning are restricted. Company Intelligence takes no new applications.", "src": ["li-access"] },
+    { "title": "Create the app in the Developer Portal", "who": "you", "detail": "Sign in at linkedin.com/developers/apps. The console needs a LinkedIn login. (Company Page association is recalled, not verified in this run.)", "src": ["li-auth", "probe-li"] },
+    { "title": "Request products", "who": "you", "detail": "Use the Products tab to apply. Self-serve products grant scopes at once in the portal; others enter review. Applications are evaluated on partnership fit, and LinkedIn can decline.", "src": ["li-access", "li-auth"] },
+    { "title": "Add redirect URLs", "who": "either", "detail": "Auth tab. Must be absolute HTTPS URLs, no #, and query parameters are ignored.", "src": ["li-auth"] },
+    { "title": "Implement the authorization code flow", "who": "agent", "detail": "Authorize at /oauth/v2/authorization with response_type, client_id, redirect_uri, scope (space-delimited). Exchange the code within 30 minutes at /oauth/v2/accessToken (client_id and client_secret in the body).", "src": ["li-auth"] },
+    { "title": "Build for 60-day tokens", "who": "agent", "detail": "Access tokens last 60 days. Programmatic refresh tokens are available for a limited set of partners only, so for most apps users must re-run the flow (which skips consent if they are still logged in to LinkedIn and the token hasn't expired).", "src": ["li-auth"] },
+    { "title": "Upgrade to Standard tier before launch", "who": "you", "detail": "Development tier is for building and testing. Apply separately for Standard to remove call limits. For Advertising, request through a support ticket.", "src": ["li-access"] }
+  ],
+  "requirements": [
+    "LinkedIn developer account and app",
+    "Defined use case, since approval depends on partnership fit",
+    "HTTPS redirect URL without fragments",
+    "Members need the right Company Page or Ad Account role to act on those resources"
+  ],
+  "gotchas": [
+    { "issue": "Changing scopes invalidates tokens", "detail": "If you request a different scope than previously granted, all earlier access tokens are invalidated, and users must re-authenticate.", "src": ["li-auth"] },
+    { "issue": "Development tier call caps", "detail": "500 calls/app/24h and 100/member/24h on Community Management. No BATCH_GET and no push notifications for social actions.", "src": ["li-access"] },
+    { "issue": "12-month clock", "detail": "Community Management Development access expects the integration to be built and tested within 12 months.", "src": ["li-access"] },
+    { "issue": "Restricted products have no timeline", "detail": "LinkedIn evaluates case by case and points you to Developer Support for status.", "src": ["li-access"] },
+    { "issue": "Version sunsets", "detail": "Marketing version 202511 sunsets on November 16, 2026. Build against a current versioned API.", "src": ["li-access"] }
+  ],
+  "blockers": [
+    { "problem": "Invalid scope (401)", "fix": "The scope isn't assigned to your app. Check the Auth tab for what is available, and apply for the product that grants it." },
+    { "problem": "redirect_uri doesn't match (401)", "fix": "Make the request value identical to the one in the Auth tab." },
+    { "problem": "Application sits without an answer", "fix": "Contact the Developer Support Portal. Restricted APIs have no SLA." }
+  ],
+  "sources": [
+    { "id": "li-auth", "url": "https://learn.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow", "title": "LinkedIn: 3-Legged OAuth Flow", "status": "read", "note": "Fetched 2026-11-06. Endpoints, redirect rules, 30-minute code, 60-day tokens, limited programmatic refresh." },
+    { "id": "li-access", "url": "https://learn.microsoft.com/en-us/linkedin/marketing/increasing-access", "title": "LinkedIn Marketing: Increasing Access", "status": "read", "note": "Fetched 2026-11-06 (the URL I first tried redirected to this page). Product availability, tiers, call limits, no fixed timeline for restricted APIs." },
+    { "id": "probe-li", "url": "https://www.linkedin.com/developers/apps", "title": "Probe: developer apps URL", "status": "tested", "note": "Resolves (200); requires login." }
+  ],
+  "tested": [
+    { "what": "Discovery metadata on www.linkedin.com", "result": "404 on both well-known paths.", "at": "2026-11-06" },
+    { "what": "Developer apps URL", "result": "Resolves (200). Creating an app needs a LinkedIn session.", "at": "2026-11-06" }
+  ],
+  "confidence": "High for flow, tiers and limits (docs read). No data on real approval turnaround, so the total time is an estimate."
+}

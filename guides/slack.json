@@ -1,0 +1,55 @@
+{
+  "slug": "slack", "name": "Slack", "website": "https://slack.com", "mode": "curated", "generatedAt": "2026-11-06",
+  "category": "Communication",
+  "summary": "Easy to create, easy to install in one workspace. Installing in other customers' workspaces needs distribution turned on. A public Marketplace listing is an optional, discretionary review with a usage floor. Beware: the discovery document on slack.com describes Sign in with Slack only, not app installs.",
+  "difficulty": { "score": 2, "label": "Easy to moderate", "why": "Self-serve for unlisted distribution. Marketplace review is optional but has requirements and no published timeline." },
+  "time": { "handsOn": "30-60 min", "wait": "None for unlisted distribution. Marketplace review time is not published.", "total": "Same day for private use. Weeks plausible for Marketplace (unverified)." },
+  "approval": { "required": false, "type": "None to install; Marketplace review optional", "detail": "Marketplace apps are checked against guidelines and installed and tested by the team. The team may deny any app. Minimum usage: 10 active workspaces and 20 monthly active users." },
+  "endpoints": { "authorize": "https://slack.com/oauth/v2/authorize", "token": "oauth.v2.access (https://slack.com/api/oauth.v2.access)", "pkce": "Unknown", "discovery": "slack.com/.well-known/openid-configuration exists but covers Sign in with Slack (openid, profile, email) only. Do not use it for app installs." },
+  "agentCan": [
+    "Generate the app manifest (scopes, redirect URLs, event subscriptions) so you can create the app from a paste",
+    "Build the authorize URL and the oauth.v2.access exchange",
+    "Review your requested scopes and flag any you do not use, since unused scopes are a listed reason Marketplace submissions get returned",
+    "Draft the Marketplace listing copy and a security checklist"
+  ],
+  "youMustDo": [
+    "Create the app at api.slack.com/apps under a workspace you control",
+    "Activate public distribution in the app settings",
+    "Submit for Marketplace review yourself, and respond to reviewers quickly"
+  ],
+  "steps": [
+    { "title": "Create the app", "who": "you", "detail": "At api.slack.com/apps choose Create New App. Starting from a manifest is faster and reviewable in a PR.", "src": ["slack-oauth"] },
+    { "title": "Configure redirect URLs and scopes", "who": "either", "detail": "Redirect URLs must be HTTPS, cannot contain an anchor (#), and your redirect_uri must match or be a subdirectory of a configured URL. With several URLs configured, send the same redirect_uri in both the authorize and access steps, or Slack returns bad_redirect_uri.", "src": ["slack-oauth"] },
+    { "title": "Choose bot vs user scopes", "who": "agent", "detail": "Bot tokens come from oauth.v2.access. A user-token flow also exists (oauth.v2.user.access). Request the minimum scopes.", "src": ["slack-oauth"] },
+    { "title": "Enable distribution", "who": "you", "detail": "Undistributed apps can only be installed on the workspace where they were created. Distribution settings live under Manage Distribution in app settings. The oauth doc did not describe the steps, so confirm against the distribution docs.", "src": ["slack-oauth"] },
+    { "title": "Consider token rotation", "who": "agent", "detail": "Available for apps using granular permissions: tokens are exchanged for a refresh token plus expiring access token. Without rotation, tokens do not expire.", "src": ["slack-oauth"] },
+    { "title": "Optional: Marketplace listing", "who": "you", "detail": "Needs a policy-compliant app, a quality listing, and prompt support (a reply within 2 business days). Expect the team to install and test it. Security: use the state parameter, TLS 1.2+, verify request signatures, store tokens securely.", "src": ["slack-market"] }
+  ],
+  "requirements": [
+    "Slack workspace where you can create apps",
+    "HTTPS redirect URL",
+    "For Marketplace: at least 10 active workspaces and 20 monthly active users, a support channel, and compliant branding"
+  ],
+  "gotchas": [
+    { "issue": "Wrong discovery document", "detail": "An agent that probes /.well-known on slack.com finds a valid OIDC document, but its endpoints are for Sign in with Slack and will not install your app.", "src": ["probe-slack"] },
+    { "issue": "Marketplace is discretionary", "detail": "The team may deny any app. Mismatched images, unused scopes and substantial feature changes can trigger a return or resubmission.", "src": ["slack-market"] },
+    { "issue": "Review duration not published", "detail": "The guidelines page defers to a separate review guide, which was not read in this run.", "src": ["slack-market"] },
+    { "issue": "Chicken-and-egg", "detail": "You need 10 active workspaces before you can list publicly, so unlisted distribution has to carry you there.", "src": ["slack-market"] }
+  ],
+  "blockers": [
+    { "problem": "bad_redirect_uri", "fix": "Make redirect_uri identical in the authorize and oauth.v2.access calls when more than one URL is configured." },
+    { "problem": "unapproved_scope on a published app", "fix": "A scope you request is not yet approved for the listing. Request only approved scopes or resubmit with the new one." },
+    { "problem": "Customer workspace restricts app installs", "fix": "A workspace admin must approve it (recalled behavior, not verified in this run)." }
+  ],
+  "sources": [
+    { "id": "slack-oauth", "url": "https://docs.slack.dev/authentication/installing-with-oauth", "title": "Slack docs: Installing with OAuth", "status": "read", "note": "Fetched 2026-11-06 via redirect from api.slack.com. Endpoints, redirect rules, rotation. Does not explain distribution steps." },
+    { "id": "slack-market", "url": "https://docs.slack.dev/slack-marketplace/slack-marketplace-app-guidelines-and-requirements", "title": "Slack Marketplace guidelines and requirements", "status": "read", "note": "Fetched 2026-11-06. Usage floor, review behavior, security requirements. No review duration." },
+    { "id": "probe-slack", "url": "https://slack.com/.well-known/openid-configuration", "title": "Probe: slack.com openid-configuration", "status": "tested", "note": "HTTP 200. authorization_endpoint is /openid/connect/authorize and scopes are openid, profile, email." }
+  ],
+  "tested": [
+    { "what": "GET slack.com/.well-known/openid-configuration", "result": "200 with scopes openid/profile/email. This is Sign in with Slack, not app install OAuth.", "at": "2026-11-06" },
+    { "what": "GET slack.com/.well-known/oauth-authorization-server", "result": "404", "at": "2026-11-06" },
+    { "what": "api.slack.com/apps", "result": "Resolves (200).", "at": "2026-11-06" }
+  ],
+  "confidence": "High for flow and redirect rules. Distribution steps and Marketplace timing are not verified."
+}

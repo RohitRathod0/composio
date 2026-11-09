@@ -1,0 +1,46 @@
+{
+  "slug": "notion", "name": "Notion", "website": "https://www.notion.so", "mode": "curated", "generatedAt": "2026-11-06",
+  "category": "Productivity",
+  "summary": "Self-serve public integration, no review needed to start. A Marketplace listing is separate and optional. The catches are the Basic-auth token exchange, rotating refresh tokens, and that users only share the pages they pick.",
+  "difficulty": { "score": 1, "label": "Easy", "why": "No approval. Setup is one form. The tricky parts are implementation details, not process." },
+  "time": { "handsOn": "15-20 min", "wait": "None", "total": "Under an hour" },
+  "approval": { "required": false, "type": "None to authorize users", "detail": "The docs say Marketplace submission or review is not required to start authorization. The Marketplace listing has its own review, whose timeline I could not find." },
+  "endpoints": { "authorize": "https://api.notion.com/v1/oauth/authorize", "token": "https://api.notion.com/v1/oauth/token", "pkce": "Unknown", "discovery": "None published (probe returned 400)" },
+  "agentCan": [
+    "Build the authorize URL with owner=user and a state value",
+    "Write the token exchange with the Basic auth header (base64 of client_id:client_secret)",
+    "Implement refresh handling that replaces both tokens on every refresh",
+    "Test against your own workspace once you paste credentials"
+  ],
+  "youMustDo": [
+    "Create the integration in the Notion developer portal (login required)",
+    "Choose the 'Any workspace' installation scope. It cannot be changed afterwards",
+    "Copy the client secret and keep it out of source control"
+  ],
+  "steps": [
+    { "title": "Create a public integration", "who": "you", "detail": "In the Notion developer portal, create a new OAuth integration. Enter your redirect URI(s) in the OAuth configuration section.", "src": ["notion-auth"] },
+    { "title": "Set installation scope to Any workspace", "who": "you", "detail": "Do this at creation. The docs state it can't be changed later, so a mistake means a new integration with a new client ID.", "src": ["notion-auth"] },
+    { "title": "Copy credentials", "who": "you", "detail": "Client ID, client secret and the authorization URL are on the Configuration tab.", "src": ["notion-auth"] },
+    { "title": "Send users to authorize", "who": "agent", "detail": "GET /v1/oauth/authorize with client_id, redirect_uri, response_type=code, owner=user, and an optional state.", "src": ["notion-auth"] },
+    { "title": "Exchange the code", "who": "agent", "detail": "POST /v1/oauth/token with HTTP Basic auth (client_id:client_secret), body grant_type=authorization_code and code. If the authorize URL carried redirect_uri, or you registered more than one URI, the token request must include it too.", "src": ["notion-auth"] },
+    { "title": "Handle refresh", "who": "agent", "detail": "Refresh at the same endpoint with grant_type=refresh_token. Each refresh returns a new access token and a new refresh token, so store both every time.", "src": ["notion-auth"] }
+  ],
+  "requirements": ["A Notion account that can create integrations", "At least one redirect URI", "Server-side secret storage"],
+  "gotchas": [
+    { "issue": "Users choose what to share", "detail": "Access is limited to pages the user shares with the connection. Your agent may find an empty workspace after a successful OAuth flow, so add an onboarding step asking users to pick pages.", "src": ["notion-auth"] },
+    { "issue": "Rotating refresh tokens", "detail": "A refresh returns a new refresh token, so store the new pair every time.", "src": ["notion-auth"] },
+    { "issue": "Token lifetime not documented on this page", "detail": "The authorization page doesn't state how long access tokens last. Plan to refresh on 401.", "src": ["notion-auth"] }
+  ],
+  "blockers": [
+    { "problem": "Need a different installation scope", "fix": "Create a new integration. The scope is fixed at creation." },
+    { "problem": "Token exchange rejects the redirect_uri", "fix": "Send the same redirect_uri you used in the authorize step." }
+  ],
+  "sources": [
+    { "id": "notion-auth", "url": "https://developers.notion.com/docs/authorization", "title": "Notion Developers: Authorization", "status": "read", "note": "Fetched 2026-11-06. Steps, endpoints and the no-review statement come from here." }
+  ],
+  "tested": [
+    { "what": "Discovery metadata on api.notion.com", "result": "400 on both well-known paths. None published.", "at": "2026-11-06" },
+    { "what": "Integrations page URL", "result": "Resolves (200). Login required to create an integration.", "at": "2026-11-06" }
+  ],
+  "confidence": "High for setup and flow. Marketplace review time unknown."
+}

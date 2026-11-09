@@ -1,0 +1,182 @@
+{
+ "github.com": {
+  "domain": "github.com",
+  "results": [
+   {
+    "url": "https://github.com/.well-known/oauth-authorization-server",
+    "finalUrl": "https://github.com/.well-known/oauth-authorization-server",
+    "status": 404,
+    "found": false,
+    "meta": null
+   },
+   {
+    "url": "https://github.com/.well-known/openid-configuration",
+    "finalUrl": "https://github.com/.well-known/openid-configuration",
+    "status": 404,
+    "found": false,
+    "meta": null
+   }
+  ],
+  "checkedAt": "2026-11-06T07:28:34.424Z"
+ },
+ "slack.com": {
+  "domain": "slack.com",
+  "results": [
+   {
+    "url": "https://slack.com/.well-known/oauth-authorization-server",
+    "finalUrl": "https://slack.com/.well-known/oauth-authorization-server",
+    "status": 404,
+    "found": false,
+    "meta": null
+   },
+   {
+    "url": "https://slack.com/.well-known/openid-configuration",
+    "finalUrl": "https://slack.com/.well-known/openid-configuration",
+    "status": 200,
+    "found": true,
+    "meta": {
+     "issuer": "https://slack.com",
+     "authorization_endpoint": "https://slack.com/openid/connect/authorize",
+     "token_endpoint": "https://slack.com/api/openid.connect.token",
+     "scopes_supported": [
+      "openid",
+      "profile",
+      "email"
+     ],
+     "grant_types_supported": [
+      "authorization_code"
+     ]
+    }
+   }
+  ],
+  "checkedAt": "2026-11-06T07:28:35.232Z"
+ },
+ "api.notion.com": {
+  "domain": "api.notion.com",
+  "results": [
+   {
+    "url": "https://api.notion.com/.well-known/oauth-authorization-server",
+    "finalUrl": "https://api.notion.com/.well-known/oauth-authorization-server",
+    "status": 400,
+    "found": false,
+    "meta": null
+   },
+   {
+    "url": "https://api.notion.com/.well-known/openid-configuration",
+    "finalUrl": "https://api.notion.com/.well-known/openid-configuration",
+    "status": 400,
+    "found": false,
+    "meta": null
+   }
+  ],
+  "checkedAt": "2026-11-06T07:28:36.100Z"
+ },
+ "www.linkedin.com": {
+  "domain": "www.linkedin.com",
+  "results": [
+   {
+    "url": "https://www.linkedin.com/.well-known/oauth-authorization-server",
+    "finalUrl": "https://www.linkedin.com/.well-known/oauth-authorization-server",
+    "status": 404,
+    "found": false,
+    "meta": null
+   },
+   {
+    "url": "https://www.linkedin.com/.well-known/openid-configuration",
+    "finalUrl": "https://www.linkedin.com/.well-known/openid-configuration",
+    "status": 404,
+    "found": false,
+    "meta": null
+   }
+  ],
+  "checkedAt": "2026-11-06T07:28:37.126Z"
+ },
+ "accounts.google.com": {
+  "domain": "accounts.google.com",
+  "results": [
+   {
+    "url": "https://accounts.google.com/.well-known/oauth-authorization-server",
+    "finalUrl": "https://accounts.google.com/.well-known/oauth-authorization-server",
+    "status": 200,
+    "found": true,
+    "meta": {
+     "issuer": "https://accounts.google.com",
+     "authorization_endpoint": "https://accounts.google.com/o/oauth2/v2/auth",
+     "token_endpoint": "https://oauth2.googleapis.com/token",
+     "scopes_supported": [],
+     "code_challenge_methods_supported": [
+      "plain",
+      "S256"
+     ],
+     "grant_types_supported": [
+      "authorization_code",
+      "refresh_token",
+      "urn:ietf:params:oauth:grant-type:device_code",
+      "urn:ietf:params:oauth:grant-type:jwt-bearer"
+     ],
+     "revocation_endpoint": "https://oauth2.googleapis.com/revoke"
+    }
+   },
+   {
+    "url": "https://accounts.google.com/.well-known/openid-configuration",
+    "finalUrl": "https://accounts.google.com/.well-known/openid-configuration",
+    "status": 200,
+    "found": true,
+    "meta": {
+     "issuer": "https://accounts.google.com",
+     "authorization_endpoint": "https://accounts.google.com/o/oauth2/v2/auth",
+     "token_endpoint": "https://oauth2.googleapis.com/token",
+     "scopes_supported": [
+      "openid",
+      "email",
+      "profile"
+     ],
+     "code_challenge_methods_supported": [
+      "plain",
+      "S256"
+     ],
+     "grant_types_supported": [
+      "authorization_code",
+      "refresh_token",
+      "urn:ietf:params:oauth:grant-type:device_code",
+      "urn:ietf:params:oauth:grant-type:jwt-bearer"
+     ],
+     "revocation_endpoint": "https://oauth2.googleapis.com/revoke"
+    }
+   }
+  ],
+  "checkedAt": "2026-11-06T07:28:37.274Z"
+ },
+ "urls": [
+  {
+   "url": "https://github.com/settings/developers",
+   "status": 200,
+   "finalUrl": "https://github.com/login?return_to=https%3A%2F%2Fgithub.com%2Fsettings%2Fdevelopers",
+   "ok": true
+  },
+  {
+   "url": "https://api.slack.com/apps",
+   "status": 200,
+   "finalUrl": "https://api.slack.com/apps",
+   "ok": true
+  },
+  {
+   "url": "https://www.notion.so/profile/integrations",
+   "status": 200,
+   "finalUrl": "https://www.notion.so/profile/integrations",
+   "ok": true
+  },
+  {
+   "url": "https://www.linkedin.com/developers/apps",
+   "status": 200,
+   "finalUrl": "https://www.linkedin.com/developers/apps",
+   "ok": true
+  },
+  {
+   "url": "https://console.cloud.google.com/apis/credentials",
+   "status": 200,
+   "finalUrl": "https://accounts.google.com/v3/signin/identifier?continue=https://console.cloud.google.com/apis/credentials&followup=https://console.cloud.google.com/apis/credentials&osid=1&passive=1209600&service=cloudconsole&flowName=WebLiteSignIn&flowEntry=ServiceLogin&dsh=S-2043888758:1793950117588570",
+   "ok": true
+  }
+ ]
+}
